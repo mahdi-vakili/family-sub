@@ -54,7 +54,7 @@
                 <input
                   class="readonly-input"
                   type="text"
-                  value="{{ url_for('users.subscription_feed', token=user['token'], _external=True) }}"
+                  value="{{ url_for('users.subscription_feed', token=user['token'], user_slug=user['subscription_slug'], _external=True) }}"
                   readonly
                 >
               </td>

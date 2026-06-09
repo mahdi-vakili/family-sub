@@ -11,6 +11,7 @@ from flask import (
 
 from app.auth import admin_required
 from app.security import validate_csrf_token
+from app.subscription_urls import build_subscription_slug
 from app.users_store import (
     create_subscription_user,
     delete_subscription_user,
@@ -32,7 +33,7 @@ MAX_USER_NAME_LENGTH = 100
 @users_bp.get("/admin/users")
 @admin_required
 def user_index():
-    users = list_subscription_users()
+    users = [serialize_user(user) for user in list_subscription_users()]
     return render_template("users.html", users=users)
 
 
@@ -54,7 +55,7 @@ def create_user():
 @users_bp.get("/admin/users/<int:user_id>")
 @admin_required
 def edit_user(user_id):
-    user = get_subscription_user_or_404(user_id)
+    user = serialize_user(get_subscription_user_or_404(user_id))
     active_configs = list_active_configs()
     excluded_config_ids = list_user_excluded_config_ids(user_id)
     return render_template(
@@ -106,7 +107,8 @@ def delete_user(user_id):
 
 
 @users_bp.get("/subscriptions/<token>")
-def subscription_feed(token):
+@users_bp.get("/subscriptions/<token>/<user_slug>")
+def subscription_feed(token, user_slug=None):
     user = get_active_subscription_user_by_token(token)
     if user is None:
         return Response("Not found\n", status=404, mimetype="text/plain")
@@ -122,6 +124,12 @@ def get_subscription_user_or_404(user_id):
     if user is None:
         abort(404)
     return user
+
+
+def serialize_user(user):
+    data = dict(user)
+    data["subscription_slug"] = build_subscription_slug(user["name"])
+    return data
 
 
 def validate_user_name(raw_name):

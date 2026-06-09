@@ -6,7 +6,7 @@
   <div class="page-header stack-section">
     <div>
       <h1>Manage {{ user['name'] }}</h1>
-      <p>Active configs are included by default. Select only the entries you want to exclude for this user.</p>
+      <p>Every active config is included by default. Use the controls below only for configs you want to exclude from this user&apos;s subscription.</p>
     </div>
     <a class="table-link" href="{{ url_for('users.user_index') }}">Back to Users</a>
   </div>
@@ -26,7 +26,7 @@
         class="readonly-input compact-code-input"
         rows="2"
         readonly
-      >{{ url_for('users.subscription_feed', token=user['token'], _external=True) }}</textarea>
+      >{{ url_for('users.subscription_feed', token=user['token'], user_slug=user['subscription_slug'], _external=True) }}</textarea>
 
       <label class="toggle-row">
         <input type="checkbox" name="is_active" value="1" {% if user['is_active'] %}checked{% endif %}>
@@ -41,8 +41,8 @@
     <section class="panel stack card-tight">
       <div class="section-heading">
         <div>
-          <h2>Excluded Configs</h2>
-          <p>Checked rows will be omitted from this user&apos;s subscription output.</p>
+          <h2>Subscription Configs</h2>
+          <p>Rows stay included unless you explicitly turn on <strong>Exclude</strong>.</p>
         </div>
       </div>
 
@@ -50,15 +50,19 @@
         <div class="checkbox-list compact-checkbox-list">
           {% for config in active_configs %}
             <label class="checkbox-row compact-checkbox-row">
-              <input
-                type="checkbox"
-                name="excluded_config_ids"
-                value="{{ config['id'] }}"
-                {% if config['id'] in excluded_config_ids %}checked{% endif %}
-              >
               <span class="config-item-body">
                 <span class="config-item-id">Config {{ config['id'] }}</span>
+                <span class="config-item-state">Included by default</span>
                 <code class="config-line compact-config-line">{{ config['raw_config'] }}</code>
+              </span>
+              <span class="checkbox-decision">
+                <input
+                  type="checkbox"
+                  name="excluded_config_ids"
+                  value="{{ config['id'] }}"
+                  {% if config['id'] in excluded_config_ids %}checked{% endif %}
+                >
+                <span>Exclude</span>
               </span>
             </label>
           {% endfor %}
