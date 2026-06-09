@@ -156,3 +156,17 @@ def soft_delete_configs(config_ids):
     )
     db.commit()
     return result.rowcount
+
+
+def list_config_export_rows(include_deleted):
+    db = get_db()
+    query = """
+        SELECT raw_config
+        FROM configs
+    """
+
+    if not include_deleted:
+        query += " WHERE is_deleted = 0"
+
+    query += " ORDER BY id ASC"
+    return db.execute(query).fetchall()

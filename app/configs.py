@@ -1,8 +1,13 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
 from app.auth import admin_required
 from app.config_parser import extract_config_lines
-from app.db import import_configs, list_configs, soft_delete_configs
+from app.db import (
+    import_configs,
+    list_config_export_rows,
+    list_configs,
+    soft_delete_configs,
+)
 from app.security import validate_csrf_token
 
 configs_bp = Blueprint("configs", __name__)
@@ -64,6 +69,24 @@ def delete_single_config(config_id):
     return redirect(url_for("configs.config_index"))
 
 
+@configs_bp.get("/admin/configs/export/all")
+@admin_required
+def export_all_configs():
+    return build_export_response(
+        filename="configs-all.txt",
+        include_deleted=True,
+    )
+
+
+@configs_bp.get("/admin/configs/export/enabled")
+@admin_required
+def export_enabled_configs():
+    return build_export_response(
+        filename="configs-enabled.txt",
+        include_deleted=False,
+    )
+
+
 def parse_config_ids(raw_ids):
     parsed = []
     for raw_id in raw_ids:
@@ -72,3 +95,12 @@ def parse_config_ids(raw_ids):
         except (TypeError, ValueError):
             continue
     return parsed
+
+
+def build_export_response(filename, include_deleted):
+    rows = list_config_export_rows(include_deleted=include_deleted)
+    body = "\n".join(row["raw_config"] for row in rows)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+    }
+    return Response(body, mimetype="text/plain", headers=headers)

@@ -3,8 +3,35 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-  <section class="panel">
+  <section class="panel stack-section">
     <h1>Admin Dashboard</h1>
-    <p>Foundation is in place. Config management, subscription users, tokenized URLs, and per-user exclusions are available now. Export actions and log views will follow in the next phase.</p>
+    <p>Foundation is in place. Routine admin operations are grouped below: manage configs, manage users, export plain-text lists, and review activity logs.</p>
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="panel">
+      <h2>Configs</h2>
+      <p>Import noisy text, soft-delete entries, or export the current config sets.</p>
+      <div class="inline-actions">
+        <a class="button-link" href="{{ url_for('configs.config_index') }}">Open Configs</a>
+        <a class="button-link secondary-button" href="{{ url_for('configs.export_enabled_configs') }}">Export Enabled</a>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Users</h2>
+      <p>Create subscription users, revoke tokens, and set per-user config exclusions.</p>
+      <div class="inline-actions">
+        <a class="button-link" href="{{ url_for('users.user_index') }}">Open Users</a>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Logs</h2>
+      <p>Review subscription requests and admin sign-in attempts with timestamps.</p>
+      <div class="inline-actions">
+        <a class="button-link" href="{{ url_for('logs.log_index') }}">Open Logs</a>
+      </div>
+    </article>
   </section>
 {% endblock %}

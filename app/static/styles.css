@@ -102,7 +102,8 @@ label {
 
 input,
 textarea,
-button {
+button,
+.button-link {
   font: inherit;
 }
 
@@ -119,19 +120,31 @@ textarea {
   resize: vertical;
 }
 
-button {
+button,
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.8rem 1rem;
-  border: 0;
   border-radius: 10px;
+}
+
+button {
+  border: 0;
   background: var(--accent);
   color: #fff;
   cursor: pointer;
 }
 
+.button-link {
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+}
+.button-link:hover,
 button:hover {
   background: var(--accent-dark);
 }
-
 .secondary-button {
   background: transparent;
   color: var(--text);
@@ -189,6 +202,8 @@ button:hover {
 .table-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .table-wrap {
@@ -274,4 +289,15 @@ thead th {
 .empty-state {
   margin: 0;
   color: var(--muted);
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }

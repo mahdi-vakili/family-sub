@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Logs{% endblock %}
+
+{% block content %}
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h1>Activity Logs</h1>
+        <p>Review subscription fetches and admin sign-in attempts in one place.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h2>Subscription Access</h2>
+        <p>{{ subscription_logs|length }} request(s)</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in subscription_logs %}
+            <tr>
+              <td>{{ log['user_name'] }}</td>
+              <td>{{ log['accessed_at'] }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="2">No subscription access has been logged yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h2>Admin Login Activity</h2>
+        <p>{{ admin_login_logs|length }} attempt(s)</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Result</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in admin_login_logs %}
+            <tr>
+              <td>{{ log['username'] }}</td>
+              <td>
+                {% if log['succeeded'] %}
+                  <span class="status-pill active">Success</span>
+                {% else %}
+                  <span class="status-pill deleted">Failed</span>
+                {% endif %}
+              </td>
+              <td>{{ log['created_at'] }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="3">No admin login attempts have been logged yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

@@ -34,6 +34,8 @@
     </form>
 
     <div class="table-actions">
+      <a class="button-link secondary-button" href="{{ url_for('configs.export_all_configs') }}">Export All</a>
+      <a class="button-link secondary-button" href="{{ url_for('configs.export_enabled_configs') }}">Export Enabled</a>
       <button type="submit" form="batch-delete-form" class="secondary-button">Soft Delete Selected</button>
     </div>
 

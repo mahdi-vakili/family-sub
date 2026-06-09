@@ -21,6 +21,7 @@
               <a href="{{ url_for('auth.dashboard') }}">Dashboard</a>
               <a href="{{ url_for('configs.config_index') }}">Configs</a>
               <a href="{{ url_for('users.user_index') }}">Users</a>
+              <a href="{{ url_for('logs.log_index') }}">Logs</a>
             </nav>
             <form method="post" action="{{ url_for('auth.logout') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
