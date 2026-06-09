@@ -50,7 +50,10 @@ def register_routes(app):
 def register_context(app):
     @app.context_processor
     def inject_template_helpers():
-        return {"csrf_token": generate_csrf_token}
+        return {
+            "csrf_token": generate_csrf_token,
+            "static_version": app.config["STATIC_VERSION"],
+        }
 
 
 def initialize_database(app):

@@ -83,6 +83,19 @@ def update_subscription_user(user_id, name, is_active):
     return get_subscription_user(user_id)
 
 
+def delete_subscription_user(user_id):
+    db = get_db()
+    result = db.execute(
+        """
+        DELETE FROM subscription_users
+        WHERE id = ?
+        """,
+        (user_id,),
+    )
+    db.commit()
+    return result.rowcount
+
+
 def list_active_configs():
     db = get_db()
     return db.execute(

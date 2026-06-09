@@ -13,6 +13,7 @@ from app.auth import admin_required
 from app.security import validate_csrf_token
 from app.users_store import (
     create_subscription_user,
+    delete_subscription_user,
     get_active_subscription_user_by_token,
     get_subscription_user,
     list_active_configs,
@@ -91,6 +92,17 @@ def update_user(user_id):
 
     flash("User settings saved.", "success")
     return redirect(url_for("users.edit_user", user_id=user_id))
+
+
+@users_bp.post("/admin/users/<int:user_id>/delete")
+@admin_required
+def delete_user(user_id):
+    validate_csrf_token(request.form.get("csrf_token", ""))
+    user = get_subscription_user_or_404(user_id)
+    deleted_count = delete_subscription_user(user_id)
+    if deleted_count:
+        flash(f'Deleted subscription user "{user["name"]}".', "success")
+    return redirect(url_for("users.user_index"))
 
 
 @users_bp.get("/subscriptions/<token>")

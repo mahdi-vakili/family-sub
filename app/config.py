@@ -14,10 +14,13 @@ def load_config():
             "DATABASE_PATH",
             str(data_dir / "app.db"),
         ),
+        "STATIC_VERSION": read_int("STATIC_VERSION", default_static_version()),
         "ADMIN_USERNAME": os.environ.get("ADMIN_USERNAME", "admin"),
         "ADMIN_PASSWORD": os.environ.get("ADMIN_PASSWORD", "change-me-now"),
         "MAX_CONTENT_LENGTH": read_int("MAX_CONTENT_LENGTH", 1024 * 1024),
         "TRUST_PROXY_COUNT": read_int("TRUST_PROXY_COUNT", 0),
+        "TEMPLATES_AUTO_RELOAD": app_env == "development",
+        "SEND_FILE_MAX_AGE_DEFAULT": 0 if app_env == "development" else None,
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
         "SESSION_COOKIE_SECURE": read_bool(
@@ -54,3 +57,8 @@ def read_int(name, default):
     if value is None:
         return default
     return int(value)
+
+
+def default_static_version():
+    css_path = Path(__file__).parent / "static" / "styles.css"
+    return int(css_path.stat().st_mtime)

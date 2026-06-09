@@ -58,8 +58,12 @@
                   readonly
                 >
               </td>
-              <td>
-                <a class="table-link" href="{{ url_for('users.edit_user', user_id=user['id']) }}">Manage</a>
+              <td class="row-actions">
+                <a class="table-link" href="{{ url_for('users.edit_user', user_id=user['id']) }}">Edit</a>
+                <form method="post" action="{{ url_for('users.delete_user', user_id=user['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="danger-button">Delete</button>
+                </form>
               </td>
             </tr>
           {% else %}
