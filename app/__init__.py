@@ -1,7 +1,8 @@
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.auth import auth_bp
-from app.config import load_config
+from app.config import load_config, validate_config
 from app.configs import configs_bp
 from app.db import close_db, ensure_admin_account, init_db
 from app.logs import logs_bp
@@ -16,6 +17,7 @@ def create_app(test_overrides=None):
     if test_overrides:
         app.config.update(test_overrides)
 
+    validate_config(app.config)
     register_extensions(app)
     register_routes(app)
     register_context(app)
@@ -25,6 +27,15 @@ def create_app(test_overrides=None):
 
 def register_extensions(app):
     app.teardown_appcontext(close_db)
+    trust_proxy_count = app.config.get("TRUST_PROXY_COUNT", 0)
+    if trust_proxy_count > 0:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=trust_proxy_count,
+            x_proto=trust_proxy_count,
+            x_host=trust_proxy_count,
+            x_port=trust_proxy_count,
+        )
 
 
 def register_routes(app):

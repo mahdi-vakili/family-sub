@@ -1,0 +1,7 @@
+.git
+.history
+.pytest_cache
+__pycache__
+data
+outputs
+work
