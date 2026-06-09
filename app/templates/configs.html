@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Configs{% endblock %}
+
+{% block content %}
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h1>Configs</h1>
+        <p>Paste noisy text below. The parser will extract URI-style config lines and skip duplicates automatically.</p>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('configs.import_config_batch') }}" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="config_blob">Batch Import</label>
+      <textarea id="config_blob" name="config_blob" rows="10" placeholder="Paste config text here" required></textarea>
+      <div>
+        <button type="submit">Import Configs</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h2>Stored Configs</h2>
+        <p>{{ configs|length }} total config(s)</p>
+      </div>
+    </div>
+
+    <form id="batch-delete-form" method="post" action="{{ url_for('configs.batch_delete_configs') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </form>
+
+    <div class="table-actions">
+      <button type="submit" form="batch-delete-form" class="secondary-button">Soft Delete Selected</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Status</th>
+            <th>Config</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for config in configs %}
+            <tr class="{% if config['is_deleted'] %}row-deleted{% endif %}">
+              <td>
+                {% if not config['is_deleted'] %}
+                  <input type="checkbox" name="config_ids" value="{{ config['id'] }}" form="batch-delete-form">
+                {% endif %}
+              </td>
+              <td>
+                {% if config['is_deleted'] %}
+                  <span class="status-pill deleted">Deleted</span>
+                {% else %}
+                  <span class="status-pill active">Active</span>
+                {% endif %}
+              </td>
+              <td><code class="config-line">{{ config['raw_config'] }}</code></td>
+              <td>
+                {% if not config['is_deleted'] %}
+                  <form method="post" action="{{ url_for('configs.delete_single_config', config_id=config['id']) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="danger-button">Soft Delete</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="4">No configs stored yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
