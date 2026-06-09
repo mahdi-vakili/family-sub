@@ -1,4 +1,5 @@
 from functools import wraps
+from urllib.parse import urlsplit
 
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 
@@ -75,5 +76,15 @@ def handle_login_submission():
     session["admin_user_id"] = admin["id"]
     session["admin_username"] = admin["username"]
 
-    next_url = request.args.get("next") or url_for("auth.dashboard")
-    return redirect(next_url)
+    return redirect(resolve_next_url(request.args.get("next")))
+
+
+def resolve_next_url(next_url):
+    if not next_url:
+        return url_for("auth.dashboard")
+
+    parsed = urlsplit(next_url)
+    if parsed.scheme or parsed.netloc or not next_url.startswith("/"):
+        return url_for("auth.dashboard")
+
+    return next_url

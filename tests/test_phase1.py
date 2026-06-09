@@ -48,7 +48,7 @@ def test_admin_login_works_with_valid_credentials(client):
 
     dashboard = client.get("/admin")
     assert dashboard.status_code == 200
-    assert b"Foundation is in place" in dashboard.data
+    assert b"Admin Dashboard" in dashboard.data
 
 
 def test_admin_login_fails_with_invalid_credentials(client):

@@ -33,6 +33,16 @@ python wsgi.py
 
 On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`.
 
+## Testing
+
+Run the test suite with:
+
+```bash
+python -m pytest -q
+```
+
+The tests cover parsing, auth guards, user-specific exclusions, exports, logs, production config checks, and the end-to-end admin workflow.
+
 ## Docker Compose
 
 1. Copy `.env.example` to `.env`.

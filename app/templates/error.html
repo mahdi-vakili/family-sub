@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+      </div>
+      <a class="table-link" href="{{ url_for('auth.dashboard' if g.admin_user_id else 'auth.login') }}">
+        Return
+      </a>
+    </div>
+  </section>
+{% endblock %}

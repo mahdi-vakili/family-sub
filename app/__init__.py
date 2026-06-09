@@ -5,6 +5,7 @@ from app.auth import auth_bp
 from app.config import load_config, validate_config
 from app.configs import configs_bp
 from app.db import close_db, ensure_admin_account, init_db
+from app.errors import register_error_handlers
 from app.logs import logs_bp
 from app.security import generate_csrf_token
 from app.users import users_bp
@@ -21,6 +22,7 @@ def create_app(test_overrides=None):
     register_extensions(app)
     register_routes(app)
     register_context(app)
+    register_error_handlers(app)
     initialize_database(app)
     return app
 
