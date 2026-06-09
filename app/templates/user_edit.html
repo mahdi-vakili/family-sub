@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Manage User{% endblock %}
+
+{% block content %}
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h1>Manage {{ user['name'] }}</h1>
+        <p>Active configs are included by default. Check any config below to exclude it only for this user.</p>
+      </div>
+      <a class="table-link" href="{{ url_for('users.user_index') }}">Back to Users</a>
+    </div>
+
+    <form method="post" action="{{ url_for('users.update_user', user_id=user['id']) }}" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <label for="name">User Name</label>
+      <input id="name" name="name" type="text" maxlength="100" value="{{ user['name'] }}" required>
+
+      <label for="subscription_url">Subscription URL</label>
+      <input
+        id="subscription_url"
+        class="readonly-input"
+        type="text"
+        value="{{ url_for('users.subscription_feed', token=user['token'], _external=True) }}"
+        readonly
+      >
+
+      <label class="checkbox-row">
+        <input type="checkbox" name="is_active" value="1" {% if user['is_active'] %}checked{% endif %}>
+        <span>Subscription token is active</span>
+      </label>
+
+      <section class="subpanel stack">
+        <div class="section-heading">
+          <div>
+            <h2>Excluded Configs</h2>
+            <p>Checked configs will be omitted from this user&apos;s public subscription output.</p>
+          </div>
+        </div>
+
+        {% if active_configs %}
+          <div class="checkbox-list">
+            {% for config in active_configs %}
+              <label class="checkbox-row">
+                <input
+                  type="checkbox"
+                  name="excluded_config_ids"
+                  value="{{ config['id'] }}"
+                  {% if config['id'] in excluded_config_ids %}checked{% endif %}
+                >
+                <code class="config-line">{{ config['raw_config'] }}</code>
+              </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty-state">No active configs are available to exclude.</p>
+        {% endif %}
+      </section>
+
+      <div>
+        <button type="submit">Save User</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h1>Subscription Users</h1>
+        <p>Create family users here. Each one receives a unique tokenized subscription URL.</p>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('users.create_user') }}" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="name">New User Name</label>
+      <input id="name" name="name" type="text" maxlength="100" placeholder="Family member name" required>
+      <div>
+        <button type="submit">Create User</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
+        <h2>Existing Users</h2>
+        <p>{{ users|length }} user(s)</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Subscription URL</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td>{{ user['name'] }}</td>
+              <td>
+                {% if user['is_active'] %}
+                  <span class="status-pill active">Active</span>
+                {% else %}
+                  <span class="status-pill deleted">Revoked</span>
+                {% endif %}
+              </td>
+              <td>
+                <input
+                  class="readonly-input"
+                  type="text"
+                  value="{{ url_for('users.subscription_feed', token=user['token'], _external=True) }}"
+                  readonly
+                >
+              </td>
+              <td>
+                <a class="table-link" href="{{ url_for('users.edit_user', user_id=user['id']) }}">Manage</a>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="4">No subscription users created yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

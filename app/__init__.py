@@ -5,6 +5,7 @@ from app.config import load_config
 from app.configs import configs_bp
 from app.db import close_db, ensure_admin_account, init_db
 from app.security import generate_csrf_token
+from app.users import users_bp
 
 
 def create_app(test_overrides=None):
@@ -28,6 +29,7 @@ def register_extensions(app):
 def register_routes(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(configs_bp)
+    app.register_blueprint(users_bp)
 
 
 def register_context(app):
