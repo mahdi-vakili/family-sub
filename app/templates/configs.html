@@ -43,7 +43,7 @@
     <div class="section-heading">
       <div>
         <h2>Stored Configs</h2>
-        <p>{{ configs|length }} total config(s)</p>
+        <p>{{ configs|selectattr("is_deleted", "equalto", 0)|list|length }} active config(s), {{ configs|length }} total</p>
       </div>
     </div>
 
