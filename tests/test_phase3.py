@@ -41,7 +41,7 @@ def test_subscription_output_includes_active_configs_by_default(client, app):
     assert response.text.splitlines() == ["vless://one", "vmess://two"]
 
 
-def test_soft_deleted_configs_are_excluded_from_subscription_output(client, app):
+def test_deleted_configs_are_excluded_from_subscription_output(client, app):
     login_admin(client)
     import_configs(client, "vless://one\nvmess://two")
     delete_config(client, 1)

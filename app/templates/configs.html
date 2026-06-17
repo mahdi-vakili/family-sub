@@ -7,7 +7,7 @@
     <div class="section-heading">
       <div>
         <h1>Configs</h1>
-        <p>Paste noisy text below. The parser will extract URI-style config lines and skip duplicates automatically.</p>
+        <p>Paste noisy text below. The parser will extract URI-style config lines and skip duplicates automatically. HTTP/HTTPS links are ignored.</p>
       </div>
     </div>
 
@@ -25,7 +25,7 @@
     <div class="section-heading">
       <div>
         <h1>Batch Delete</h1>
-        <p>Paste config URIs below. Matching active configs will be soft-deleted.</p>
+        <p>Paste config URIs below. Matching configs will be permanently deleted.</p>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
     <div class="section-heading">
       <div>
         <h2>Stored Configs</h2>
-        <p>{{ active_count }} active config(s), {{ configs|length }} total</p>
+        <p>{{ configs|length }} config(s)</p>
       </div>
     </div>
 
@@ -53,8 +53,7 @@
 
     <div class="table-actions">
       <a class="button-link secondary-button" href="{{ url_for('configs.export_all_configs') }}">Export All</a>
-      <a class="button-link secondary-button" href="{{ url_for('configs.export_enabled_configs') }}">Export Enabled</a>
-      <button type="submit" form="batch-delete-form" class="secondary-button">Soft Delete Selected</button>
+      <button type="submit" form="batch-delete-form" class="danger-button">Delete Selected</button>
     </div>
 
     <div class="table-wrap">
@@ -62,45 +61,33 @@
         <thead>
           <tr>
             <th>Select</th>
-            <th>Status</th>
             <th>Config</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
           {% for config in configs %}
-            <tr class="{% if config['is_deleted'] %}row-deleted{% endif %}">
+            <tr>
               <td>
-                {% if not config['is_deleted'] %}
-                  <label class="checkbox-hit-area" aria-label="Select config {{ config['id'] }}">
-                    <input type="checkbox" name="config_ids" value="{{ config['id'] }}" form="batch-delete-form">
-                  </label>
-                {% endif %}
-              </td>
-              <td>
-                {% if config['is_deleted'] %}
-                  <span class="status-pill deleted">Deleted</span>
-                {% else %}
-                  <span class="status-pill active">Active</span>
-                {% endif %}
+                <label class="checkbox-hit-area" aria-label="Select config {{ config['id'] }}">
+                  <input type="checkbox" name="config_ids" value="{{ config['id'] }}" form="batch-delete-form">
+                </label>
               </td>
               <td><code class="config-line">{{ config['raw_config'] }}</code></td>
               <td>
-                {% if not config['is_deleted'] %}
-                  <form method="post" action="{{ url_for('configs.delete_single_config', config_id=config['id']) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="danger-button icon-button" aria-label="Soft delete config {{ config['id'] }}">
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v8h-2V9Zm4 0h2v8h-2V9ZM7 9h2v8H7V9Zm1 12a2 2 0 0 1-2-2V8h12v11a2 2 0 0 1-2 2H8Z" />
-                      </svg>
-                    </button>
-                  </form>
-                {% endif %}
+                <form method="post" action="{{ url_for('configs.delete_single_config', config_id=config['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="danger-button icon-button" aria-label="Delete config {{ config['id'] }}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v8h-2V9Zm4 0h2v8h-2V9ZM7 9h2v8H7V9Zm1 12a2 2 0 0 1-2-2V8h12v11a2 2 0 0 1-2 2H8Z" />
+                    </svg>
+                  </button>
+                </form>
               </td>
             </tr>
           {% else %}
             <tr>
-              <td colspan="4">No configs stored yet.</td>
+              <td colspan="3">No configs stored yet.</td>
             </tr>
           {% endfor %}
         </tbody>

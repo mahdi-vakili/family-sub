@@ -49,7 +49,7 @@ def test_import_skips_duplicates(client, app):
     assert [config["raw_config"] for config in configs] == ["vmess://two", "vless://one"]
 
 
-def test_soft_deleted_configs_remain_in_database(client, app):
+def test_deleted_configs_are_removed_from_database(client, app):
     login_admin(client)
     import_configs(client, "vless://one\nvmess://two")
 
@@ -64,12 +64,10 @@ def test_soft_deleted_configs_remain_in_database(client, app):
     assert response.status_code == 200
 
     with app.app_context():
-        configs = list_configs(include_deleted=True)
-        active_configs = list_configs(include_deleted=False)
+        configs = list_configs()
 
-    assert len(configs) == 2
-    assert len(active_configs) == 1
-    assert configs[1]["is_deleted"] == 1
+    assert len(configs) == 1
+    assert configs[0]["raw_config"] == "vmess://two"
 
 
 def test_single_delete_works(client):
@@ -85,8 +83,7 @@ def test_single_delete_works(client):
     )
 
     assert response.status_code == 200
-    assert b"Soft-deleted 1 config(s)." in response.data
-    assert b"Deleted" in response.data
+    assert b"Deleted 1 config(s)." in response.data
 
 
 def test_batch_delete_works(client):
@@ -102,10 +99,10 @@ def test_batch_delete_works(client):
     )
 
     assert response.status_code == 200
-    assert b"Soft-deleted 2 config(s)." in response.data
+    assert b"Deleted 2 config(s)." in response.data
 
 
-def test_config_list_shows_active_and_deleted_states(client):
+def test_config_list_updates_after_delete(client):
     login_admin(client)
     import_configs(client, "vless://one\nvmess://two")
 
@@ -120,8 +117,8 @@ def test_config_list_shows_active_and_deleted_states(client):
     response = client.get("/admin/configs")
 
     assert response.status_code == 200
-    assert b"Active" in response.data
-    assert b"Deleted" in response.data
+    assert b"vmess://two" in response.data
+    assert b"vless://one" not in response.data
 
 
 def import_configs(client, config_blob):

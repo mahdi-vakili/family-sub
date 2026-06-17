@@ -4,10 +4,10 @@ from app.auth import admin_required
 from app.config_parser import extract_config_lines
 from app.db import (
     delete_configs_by_raw,
+    hard_delete_configs,
     import_configs,
     list_config_export_rows,
     list_configs,
-    soft_delete_configs,
 )
 from app.security import validate_csrf_token
 
@@ -17,9 +17,8 @@ configs_bp = Blueprint("configs", __name__)
 @configs_bp.get("/admin/configs")
 @admin_required
 def config_index():
-    configs = list_configs(include_deleted=True)
-    active_count = sum(1 for c in configs if not c["is_deleted"])
-    return render_template("configs.html", configs=configs, active_count=active_count)
+    configs = list_configs()
+    return render_template("configs.html", configs=configs)
 
 
 @configs_bp.post("/admin/configs/import")
@@ -35,12 +34,8 @@ def import_config_batch():
         return redirect(url_for("configs.config_index"))
 
     stats = import_configs(config_lines)
-    skipped = stats["duplicates"]
     flash(
-        (
-            f"Import complete. Added {stats['inserted']}, "
-            f"restored {stats['restored']}, skipped {skipped} duplicates."
-        ),
+        f"Import complete. Added {stats['inserted']}, skipped {stats['duplicates']} duplicates.",
         "success",
     )
     return redirect(url_for("configs.config_index"))
@@ -52,7 +47,7 @@ def delete_config_batch_by_paste():
     validate_csrf_token(request.form.get("csrf_token", ""))
 
     config_blob = request.form.get("delete_blob", "")
-    config_lines = extract_config_lines(config_blob)
+    config_lines = extract_config_lines(config_blob, exclude_web_urls=False)
 
     if not config_lines:
         flash("No valid config lines were found in the pasted text.", "error")
@@ -77,8 +72,8 @@ def batch_delete_configs():
         flash("Select at least one config to delete.", "error")
         return redirect(url_for("configs.config_index"))
 
-    deleted_count = soft_delete_configs(config_ids)
-    flash(f"Soft-deleted {deleted_count} config(s).", "success")
+    deleted_count = hard_delete_configs(config_ids)
+    flash(f"Deleted {deleted_count} config(s).", "success")
     return redirect(url_for("configs.config_index"))
 
 
@@ -87,27 +82,21 @@ def batch_delete_configs():
 def delete_single_config(config_id):
     validate_csrf_token(request.form.get("csrf_token", ""))
 
-    deleted_count = soft_delete_configs([config_id])
-    flash(f"Soft-deleted {deleted_count} config(s).", "success")
+    deleted_count = hard_delete_configs([config_id])
+    flash(f"Deleted {deleted_count} config(s).", "success")
     return redirect(url_for("configs.config_index"))
 
 
 @configs_bp.get("/admin/configs/export/all")
 @admin_required
 def export_all_configs():
-    return build_export_response(
-        filename="configs-all.txt",
-        include_deleted=True,
-    )
+    return build_export_response(filename="configs-all.txt")
 
 
 @configs_bp.get("/admin/configs/export/enabled")
 @admin_required
 def export_enabled_configs():
-    return build_export_response(
-        filename="configs-enabled.txt",
-        include_deleted=False,
-    )
+    return build_export_response(filename="configs-enabled.txt")
 
 
 def parse_config_ids(raw_ids):
@@ -120,8 +109,8 @@ def parse_config_ids(raw_ids):
     return parsed
 
 
-def build_export_response(filename, include_deleted):
-    rows = list_config_export_rows(include_deleted=include_deleted)
+def build_export_response(filename):
+    rows = list_config_export_rows()
     body = "\n".join(row["raw_config"] for row in rows)
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"',

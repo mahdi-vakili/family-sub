@@ -4,7 +4,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from app.auth import auth_bp
 from app.config import load_config, validate_config
 from app.configs import configs_bp
-from app.db import close_db, ensure_admin_account, init_db
+from app.db import cleanup_db, close_db, ensure_admin_account, init_db
 from app.errors import register_error_handlers
 from app.logs import logs_bp
 from app.security import generate_csrf_token
@@ -59,6 +59,7 @@ def register_context(app):
 def initialize_database(app):
     with app.app_context():
         init_db()
+        cleanup_db()
         ensure_admin_account(
             username=app.config["ADMIN_USERNAME"],
             password=app.config["ADMIN_PASSWORD"],

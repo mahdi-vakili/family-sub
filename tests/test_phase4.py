@@ -1,10 +1,9 @@
 from tests.conftest import extract_csrf_token, login_admin
 
 
-def test_export_all_includes_active_and_soft_deleted_configs(client):
+def test_export_all_returns_all_configs(client):
     login_admin(client)
     import_configs(client, "vless://one\nvmess://two")
-    delete_config(client, 2)
 
     response = client.get("/admin/configs/export/all")
 
@@ -16,7 +15,7 @@ def test_export_all_includes_active_and_soft_deleted_configs(client):
     assert response.text.splitlines() == ["vless://one", "vmess://two"]
 
 
-def test_export_enabled_includes_only_active_configs(client):
+def test_export_enabled_returns_only_remaining_configs(client):
     login_admin(client)
     import_configs(client, "vless://one\nvmess://two\ntrojan://three")
     delete_config(client, 2)
@@ -75,7 +74,7 @@ def test_admin_navigation_reaches_major_screens(client):
     assert users.status_code == 200
     assert logs.status_code == 200
     assert b"Logs" in dashboard.data
-    assert b"Export Enabled" in configs.data
+    assert b"Export All" in configs.data
 
 
 def import_configs(client, config_blob):

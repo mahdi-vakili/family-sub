@@ -33,7 +33,7 @@ def test_configs_page_uses_clickable_checkboxes_and_icon_delete_button(client):
 
     assert response.status_code == 200
     assert b'checkbox-hit-area' in response.data
-    assert b'aria-label="Soft delete config 1"' in response.data
+    assert b'aria-label="Delete config 1"' in response.data
 
 
 def import_configs(client, config_blob):

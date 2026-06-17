@@ -29,6 +29,27 @@ def init_db():
     db.commit()
 
 
+def cleanup_db():
+    db = get_db()
+    columns = {row[1] for row in db.execute("PRAGMA table_info(configs)").fetchall()}
+    if "is_deleted" in columns:
+        db.execute("DELETE FROM configs WHERE is_deleted = 1")
+    if "is_deleted" in columns:
+        try:
+            db.execute("ALTER TABLE configs DROP COLUMN is_deleted")
+        except sqlite3.OperationalError:
+            pass
+    if "deleted_at" in columns:
+        try:
+            db.execute("ALTER TABLE configs DROP COLUMN deleted_at")
+        except sqlite3.OperationalError:
+            pass
+    db.execute(
+        "DELETE FROM configs WHERE raw_config LIKE 'https://%' OR raw_config LIKE 'http://%'"
+    )
+    db.commit()
+
+
 def ensure_admin_account(username, password):
     db = get_db()
     admin = get_admin_by_username(username)
@@ -79,60 +100,35 @@ def record_admin_login_attempt(username, succeeded):
     db.commit()
 
 
-def list_configs(include_deleted=True):
+def list_configs():
     db = get_db()
-    query = """
-        SELECT id, raw_config, is_deleted, created_at, deleted_at
+    return db.execute(
+        """
+        SELECT id, raw_config, created_at
         FROM configs
-    """
-    params = ()
-
-    if not include_deleted:
-        query += " WHERE is_deleted = 0"
-
-    query += " ORDER BY is_deleted ASC, id DESC"
-    return db.execute(query, params).fetchall()
+        ORDER BY id DESC
+        """
+    ).fetchall()
 
 
 def import_configs(config_lines):
     db = get_db()
-    stats = {"inserted": 0, "restored": 0, "duplicates": 0}
+    stats = {"inserted": 0, "duplicates": 0}
 
     for config_line in config_lines:
         existing = db.execute(
-            """
-            SELECT id, is_deleted
-            FROM configs
-            WHERE raw_config = ?
-            """,
+            "SELECT id FROM configs WHERE raw_config = ?",
             (config_line,),
         ).fetchone()
 
         if existing is None:
             db.execute(
-                """
-                INSERT INTO configs (raw_config)
-                VALUES (?)
-                """,
+                "INSERT INTO configs (raw_config) VALUES (?)",
                 (config_line,),
             )
             stats["inserted"] += 1
-            continue
-
-        if existing["is_deleted"]:
-            db.execute(
-                """
-                UPDATE configs
-                SET is_deleted = 0,
-                    deleted_at = NULL
-                WHERE id = ?
-                """,
-                (existing["id"],),
-            )
-            stats["restored"] += 1
-            continue
-
-        stats["duplicates"] += 1
+        else:
+            stats["duplicates"] += 1
 
     db.commit()
     return stats
@@ -143,53 +139,32 @@ def delete_configs_by_raw(config_lines):
     deleted = 0
 
     for config_line in config_lines:
-        existing = db.execute(
-            "SELECT id, is_deleted FROM configs WHERE raw_config = ?",
+        result = db.execute(
+            "DELETE FROM configs WHERE raw_config = ?",
             (config_line,),
-        ).fetchone()
-
-        if existing is None or existing["is_deleted"]:
-            continue
-
-        db.execute(
-            "UPDATE configs SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (existing["id"],),
         )
-        deleted += 1
+        deleted += result.rowcount
 
     db.commit()
     return deleted
 
 
-def soft_delete_configs(config_ids):
+def hard_delete_configs(config_ids):
     if not config_ids:
         return 0
 
     db = get_db()
     placeholders = ", ".join("?" for _ in config_ids)
     result = db.execute(
-        f"""
-        UPDATE configs
-        SET is_deleted = 1,
-            deleted_at = CURRENT_TIMESTAMP
-        WHERE id IN ({placeholders})
-          AND is_deleted = 0
-        """,
+        f"DELETE FROM configs WHERE id IN ({placeholders})",
         tuple(config_ids),
     )
     db.commit()
     return result.rowcount
 
 
-def list_config_export_rows(include_deleted):
+def list_config_export_rows():
     db = get_db()
-    query = """
-        SELECT raw_config
-        FROM configs
-    """
-
-    if not include_deleted:
-        query += " WHERE is_deleted = 0"
-
-    query += " ORDER BY id ASC"
-    return db.execute(query).fetchall()
+    return db.execute(
+        "SELECT raw_config FROM configs ORDER BY id ASC"
+    ).fetchall()
