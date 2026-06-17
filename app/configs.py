@@ -18,7 +18,8 @@ configs_bp = Blueprint("configs", __name__)
 @admin_required
 def config_index():
     configs = list_configs(include_deleted=True)
-    return render_template("configs.html", configs=configs)
+    active_count = sum(1 for c in configs if not c["is_deleted"])
+    return render_template("configs.html", configs=configs, active_count=active_count)
 
 
 @configs_bp.post("/admin/configs/import")
