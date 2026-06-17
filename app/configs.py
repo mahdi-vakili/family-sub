@@ -3,6 +3,7 @@ from flask import Blueprint, Response, flash, redirect, render_template, request
 from app.auth import admin_required
 from app.config_parser import extract_config_lines
 from app.db import (
+    delete_configs_by_raw,
     import_configs,
     list_config_export_rows,
     list_configs,
@@ -39,6 +40,27 @@ def import_config_batch():
             f"Import complete. Added {stats['inserted']}, "
             f"restored {stats['restored']}, skipped {skipped} duplicates."
         ),
+        "success",
+    )
+    return redirect(url_for("configs.config_index"))
+
+
+@configs_bp.post("/admin/configs/delete-by-paste")
+@admin_required
+def delete_config_batch_by_paste():
+    validate_csrf_token(request.form.get("csrf_token", ""))
+
+    config_blob = request.form.get("delete_blob", "")
+    config_lines = extract_config_lines(config_blob)
+
+    if not config_lines:
+        flash("No valid config lines were found in the pasted text.", "error")
+        return redirect(url_for("configs.config_index"))
+
+    deleted = delete_configs_by_raw(config_lines)
+    not_found = len(config_lines) - deleted
+    flash(
+        f"Delete complete. Removed {deleted}, skipped {not_found} not found or already deleted.",
         "success",
     )
     return redirect(url_for("configs.config_index"))

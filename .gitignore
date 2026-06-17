@@ -1,4 +1,12 @@
 __pycache__/
-.history/
-.env
 .pytest_cache/
+.history/
+.venv/
+.env
+!.env.example
+data/
+work/
+outputs/
+*.db
+*.zip
+*.pyc

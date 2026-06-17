@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: family-sub
+    container_name: vpn-sub-manager
     restart: unless-stopped
     environment:
       APP_ENV: ${APP_ENV:-production}

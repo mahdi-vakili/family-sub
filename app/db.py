@@ -138,6 +138,29 @@ def import_configs(config_lines):
     return stats
 
 
+def delete_configs_by_raw(config_lines):
+    db = get_db()
+    deleted = 0
+
+    for config_line in config_lines:
+        existing = db.execute(
+            "SELECT id, is_deleted FROM configs WHERE raw_config = ?",
+            (config_line,),
+        ).fetchone()
+
+        if existing is None or existing["is_deleted"]:
+            continue
+
+        db.execute(
+            "UPDATE configs SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (existing["id"],),
+        )
+        deleted += 1
+
+    db.commit()
+    return deleted
+
+
 def soft_delete_configs(config_ids):
     if not config_ids:
         return 0

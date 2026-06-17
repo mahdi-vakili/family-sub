@@ -24,6 +24,24 @@
   <section class="panel stack-section">
     <div class="section-heading">
       <div>
+        <h1>Batch Delete</h1>
+        <p>Paste config URIs below. Matching active configs will be soft-deleted.</p>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('configs.delete_config_batch_by_paste') }}" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="delete_blob">Batch Delete</label>
+      <textarea id="delete_blob" name="delete_blob" rows="10" placeholder="Paste config text here" required></textarea>
+      <div>
+        <button type="submit" class="danger-button">Delete Matching Configs</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel stack-section">
+    <div class="section-heading">
+      <div>
         <h2>Stored Configs</h2>
         <p>{{ configs|length }} total config(s)</p>
       </div>

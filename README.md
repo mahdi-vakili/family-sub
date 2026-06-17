@@ -1,77 +1,121 @@
-# family-sub
+# vpn-sub-manager
 
-Small self-hosted subscription service for family use. Admins manage configs and users in a Flask UI, and each user gets a private plain-text subscription URL.
+A self-hosted subscription manager for distributing VPN/proxy configurations to family members. Manage configs and users through a simple web admin panel, then each family member gets a private URL they can paste into their client app.
+
+## Why This Is Useful
+
+If you manage VPN or proxy configs for your family, you know the pain: sharing configs manually, keeping track of who has what, dealing with revoked access, and having no visibility into who's actually using the service. **vpn-sub-manager** solves all of this:
+
+- **One admin panel, all configs in one place.** Paste a messy text blob containing `vless://`, `trojan://`, `vmess://`, `ss://`, or `hysteria2://` lines -- the parser extracts the valid configs, deduplicates, and ignores the rest.
+
+- **Private subscription URLs per user.** Each family member gets a unique, tokenized URL. They paste it into their VPN client (V2Ray, NekoBox, Streisand, Hiddify, etc.) and it just works. No more sending config strings over WhatsApp.
+
+- **Per-user exclusions.** Want to give Mom access to everything but limit your kid to a single server? Exclude specific configs per user without affecting anyone else.
+
+- **Access logs.** See who fetched their subscription and when. Know immediately if a token is being shared or hasn't been used in months.
+
+- **Self-hosted and minimal.** Single container, SQLite database, no external dependencies. Runs on a $5/month VPS. No data leaves your server.
 
 ## Features
 
-- SQLite-backed config and user management
-- Per-user subscription tokens
-- Per-user config exclusions
-- Soft delete and export actions
-- Subscription access logs and admin login logs
-- Docker Compose deployment on Ubuntu behind HTTPS
+- **Protocol-agnostic parsing** -- accepts VLESS, VMess, Trojan, Shadowsocks, Hysteria2, and any URI-style config line
+- **Batch import** -- paste a noisy text blob, valid configs are extracted automatically
+- **Duplicate prevention** -- same config imported twice won't create duplicates
+- **Soft delete** -- hide configs from subscriptions without permanently removing them
+- **Per-user config exclusions** -- fine-grained control over what each user sees
+- **Plain-text subscription endpoint** -- compatible with standard VPN client subscription import
+- **URL slugs** -- human-readable subscription URLs (`/subscriptions/<token>/<name>`)
+- **Access logging** -- every subscription fetch is recorded with timestamp
+- **Admin login logging** -- track login attempts (success and failure)
+- **Export** -- download all configs or only active ones as `.txt` files
+- **Docker Compose** -- one-command deployment
+- **HTTPS-ready** -- deploy behind Nginx + Certbot
 
-## Environment Variables
+## Quick Start
 
-- `APP_ENV`: `development` or `production`. Production enables HTTPS-friendly defaults.
-- `SECRET_KEY`: required in production. Used for session and CSRF protection.
-- `ADMIN_USERNAME`: admin login name. Defaults to `admin`.
-- `ADMIN_PASSWORD`: required in production. Stored as a hash in the database.
-- `DATABASE_PATH`: SQLite path. In Docker Compose it is fixed to `/app/data/app.db`.
-- `TRUST_PROXY_COUNT`: set to `1` when running behind one reverse proxy such as Nginx.
-- `SESSION_COOKIE_SECURE`: keep this at `1` behind HTTPS.
-- `MAX_CONTENT_LENGTH`: optional request size limit in bytes. Default is `1048576`.
-
-## Local Run
+### Local Development
 
 ```bash
 python -m venv .venv
-. .venv/bin/activate
+.venv\Scripts\activate        # Windows PowerShell
+# source .venv/bin/activate   # Linux/macOS
+
 pip install -r requirements.txt
 python wsgi.py
 ```
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`.
+Open `http://127.0.0.1:8000` -- login with `admin` / the password from your `.env`.
 
-## Testing
-
-Run the test suite with:
+### Docker Compose
 
 ```bash
-python -m pytest -q
-```
-
-The tests cover parsing, auth guards, user-specific exclusions, exports, logs, production config checks, and the end-to-end admin workflow.
-
-## Docker Compose
-
-1. Copy `.env.example` to `.env`.
-2. Set `SECRET_KEY` and `ADMIN_PASSWORD` to real values.
-3. Start the app:
-
-```bash
+cp .env.example .env          # create your config
+# edit .env -- set SECRET_KEY and ADMIN_PASSWORD
 docker compose up -d --build
 ```
 
-The app listens on `http://127.0.0.1:8000` and stores persistent data in `./data`.
+The app runs on `http://127.0.0.1:8000`. Data persists in `./data/`.
 
-## Production Startup Command
+## How It Works
 
-The container runs this command:
+1. **Admin imports configs** -- paste text containing proxy URIs into the import form. The parser extracts valid lines, strips junk, and stores them.
 
-```bash
-gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:app
+2. **Admin creates users** -- each user gets a unique tokenized subscription URL.
+
+3. **User imports URL into client** -- the user pastes their subscription URL into V2Ray, NekoBox, Hiddify, Streisand, or any client that supports plain-text subscription feeds.
+
+4. **Client fetches configs** -- the client requests the URL and receives a plain-text list of all active configs (minus any excluded for that user).
+
+5. **Admin monitors activity** -- check the Logs page to see who fetched their subscription and when.
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `APP_ENV` | No | `development` | Set to `production` for HTTPS-safe defaults |
+| `SECRET_KEY` | Yes (prod) | -- | Session and CSRF secret. Refuses to start with default in production |
+| `ADMIN_USERNAME` | No | `admin` | Admin login username |
+| `ADMIN_PASSWORD` | Yes (prod) | -- | Admin password. Stored as hash in database |
+| `DATABASE_PATH` | No | `./data/app.db` | SQLite database path |
+| `TRUST_PROXY_COUNT` | No | `0` | Set to `1` behind one reverse proxy |
+| `SESSION_COOKIE_SECURE` | No | `0` | Set to `1` behind HTTPS |
+| `MAX_CONTENT_LENGTH` | No | `1048576` | Max request size in bytes |
+
+## Project Structure
+
+```
+vpn-sub-manager/
+  app/
+    __init__.py          # Flask app factory
+    config.py            # Environment config loading
+    db.py                # Database layer (SQLite)
+    schema.sql           # Database schema
+    security.py          # CSRF and password hashing
+    auth.py              # Login/logout, session management
+    config_parser.py     # URI config line parser
+    configs.py           # Config import/delete/export routes
+    users.py             # User CRUD and subscription endpoint
+    users_store.py       # User data access layer
+    subscription_urls.py # URL slug builder
+    logs.py              # Access and login log views
+    logs_store.py        # Log query helpers
+    errors.py            # Error handlers
+    templates/           # Jinja2 templates
+    static/styles.css    # Stylesheet
+  tests/                 # pytest test suite
+  wsgi.py                # Application entrypoint
+  Dockerfile             # Container build
+  docker-compose.yml     # Service orchestration
+  requirements.txt       # Python dependencies
 ```
 
-## Ubuntu HTTPS Deployment
+## Production Deployment (Ubuntu)
 
-1. Install Docker Engine and Docker Compose plugin.
-2. Clone the repo on the server.
-3. Create `.env` from `.env.example`.
-4. Run `docker compose up -d --build`.
-5. Put Nginx in front of the container and terminate TLS there.
-
-Example Nginx site:
+1. Install Docker Engine and Docker Compose plugin
+2. Clone the repository
+3. Create `.env` with a strong `SECRET_KEY` and `ADMIN_PASSWORD`
+4. Run `docker compose up -d --build`
+5. Put Nginx in front with TLS termination:
 
 ```nginx
 server {
@@ -87,13 +131,20 @@ server {
 }
 ```
 
-Then issue a certificate with Certbot, for example:
+6. Issue a certificate:
 
 ```bash
 sudo certbot --nginx -d sub.example.com
 ```
 
-## Notes
+## Testing
 
-- `APP_ENV=production` refuses to start with the default `SECRET_KEY` or default admin password.
-- `./data` must remain writable so SQLite persists across container restarts.
+```bash
+python -m pytest -q
+```
+
+Covers config parsing, authentication, user subscriptions, per-user exclusions, exports, logs, and end-to-end admin workflows.
+
+## License
+
+MIT
