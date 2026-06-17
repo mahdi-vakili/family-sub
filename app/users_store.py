@@ -102,7 +102,6 @@ def list_active_configs():
         """
         SELECT id, raw_config
         FROM configs
-        WHERE is_deleted = 0
         ORDER BY id DESC
         """
     ).fetchall()
@@ -149,13 +148,12 @@ def list_subscription_configs_for_user(user_id):
         """
         SELECT c.raw_config
         FROM configs AS c
-        WHERE c.is_deleted = 0
-          AND NOT EXISTS (
-              SELECT 1
-              FROM user_config_exclusions AS e
-              WHERE e.user_id = ?
-                AND e.config_id = c.id
-          )
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM user_config_exclusions AS e
+            WHERE e.user_id = ?
+              AND e.config_id = c.id
+        )
         ORDER BY c.id ASC
         """,
         (user_id,),
