@@ -2,6 +2,7 @@ import secrets
 import sqlite3
 
 from app.db import get_db
+from app.subscription_links_store import list_all_subscription_link_configs
 
 TOKEN_BYTES = 32
 TOKEN_ATTEMPTS = 5
@@ -144,7 +145,7 @@ def replace_user_exclusions(user_id, config_ids):
 
 def list_subscription_configs_for_user(user_id):
     db = get_db()
-    return db.execute(
+    rows = db.execute(
         """
         SELECT c.raw_config
         FROM configs AS c
@@ -158,6 +159,7 @@ def list_subscription_configs_for_user(user_id):
         """,
         (user_id,),
     ).fetchall()
+    return list(rows) + list(list_all_subscription_link_configs())
 
 
 def record_subscription_access(user_id):

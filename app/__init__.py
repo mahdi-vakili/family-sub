@@ -8,6 +8,8 @@ from app.db import cleanup_db, close_db, ensure_admin_account, init_db
 from app.errors import register_error_handlers
 from app.logs import logs_bp
 from app.security import generate_csrf_token
+from app.subscription_link_fetcher import start_background_fetcher
+from app.subscription_links import subscription_links_bp
 from app.users import users_bp
 
 
@@ -24,6 +26,10 @@ def create_app(test_overrides=None):
     register_context(app)
     register_error_handlers(app)
     initialize_database(app)
+
+    if not test_overrides:
+        start_background_fetcher(app)
+
     return app
 
 
@@ -44,6 +50,7 @@ def register_routes(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(configs_bp)
     app.register_blueprint(logs_bp)
+    app.register_blueprint(subscription_links_bp)
     app.register_blueprint(users_bp)
 
 

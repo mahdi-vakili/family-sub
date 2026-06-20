@@ -41,3 +41,20 @@ CREATE TABLE IF NOT EXISTS admin_login_logs (
     succeeded INTEGER NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS subscription_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    last_fetched_at TEXT,
+    last_error TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscription_link_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscription_link_id INTEGER NOT NULL,
+    raw_config TEXT NOT NULL,
+    fetched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (subscription_link_id) REFERENCES subscription_links (id) ON DELETE CASCADE
+);
