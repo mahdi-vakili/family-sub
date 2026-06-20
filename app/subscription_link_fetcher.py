@@ -68,14 +68,16 @@ def _parse_configs(raw_bytes):
 
 
 def _decode_response(raw_bytes):
+    text = raw_bytes.decode("utf-8", errors="replace").strip()
     try:
-        decoded = base64.b64decode(raw_bytes, validate=True)
-        text = decoded.decode("utf-8", errors="replace")
-        if CONFIG_URI_PATTERN.search(text):
-            return text
+        cleaned = re.sub(r"\s+", "", text)
+        decoded = base64.b64decode(cleaned, validate=True)
+        decoded_text = decoded.decode("utf-8", errors="replace")
+        if CONFIG_URI_PATTERN.search(decoded_text):
+            return decoded_text
     except Exception:
         pass
-    return raw_bytes.decode("utf-8", errors="replace")
+    return text
 
 
 def _extract_config_lines(text):
