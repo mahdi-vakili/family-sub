@@ -137,10 +137,35 @@ server {
 sudo certbot --nginx -d sub.example.com
 ```
 
+## Deploying to Cloudflare (Workers + D1)
+
+A full serverless port lives in `worker/`: one Cloudflare Worker backed by D1,
+with a Cron Trigger replacing the background refetcher. The public subscription
+URL format is unchanged. See [`worker/README.md`](worker/README.md) for the full
+guide. In short:
+
+```bash
+cd worker
+npm install
+npx wrangler d1 create family-sub          # copy database_id into wrangler.toml
+npx wrangler d1 execute family-sub --remote --file=./schema.sql
+npx wrangler secret put SECRET_KEY
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler deploy
+```
+
+The original Flask app remains available for the VPS/Docker deployment below.
+
 ## Testing
 
 ```bash
 python -m pytest -q
+```
+
+The Worker port has its own tests:
+
+```bash
+cd worker && npm test
 ```
 
 Covers config parsing, authentication, user subscriptions, per-user exclusions, exports, logs, and end-to-end admin workflows.

@@ -1,0 +1,17 @@
+{
+  "name": "family-sub-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker + D1 port of family-sub",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute family-sub --remote --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute family-sub --local --file=./schema.sql",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.20.0"
+  }
+}

@@ -1,0 +1,31 @@
+name = "family-sub"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+# Non-secret configuration. Secrets are set with `wrangler secret put`:
+#   SECRET_KEY      - long random string used to sign session cookies
+#   ADMIN_PASSWORD  - admin login password (stored as a PBKDF2 hash in D1)
+[vars]
+APP_ENV = "production"
+ADMIN_USERNAME = "admin"
+# Lower this if the free-plan 10ms CPU limit rejects admin logins.
+PBKDF2_ITERATIONS = "100000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "family-sub"
+# Replace with the `database_id` printed by:
+#   wrangler d1 create family-sub
+database_id = "45e97ebc-97d2-4daf-8e1d-e9d8371e7887"
+
+[triggers]
+# Refresh upstream subscription links every 2 hours, matching the Flask app.
+crons = ["0 */2 * * *"]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.css", "**/*.sql"]
+fallthrough = true
+
+[observability]
+enabled = true

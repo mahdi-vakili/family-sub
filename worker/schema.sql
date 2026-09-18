@@ -1,0 +1,65 @@
+CREATE TABLE IF NOT EXISTS admin_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    raw_config TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscription_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_config_exclusions (
+    user_id INTEGER NOT NULL,
+    config_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, config_id),
+    FOREIGN KEY (user_id) REFERENCES subscription_users (id) ON DELETE CASCADE,
+    FOREIGN KEY (config_id) REFERENCES configs (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS subscription_access_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    accessed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES subscription_users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS admin_login_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    succeeded INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscription_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    last_fetched_at TEXT,
+    last_error TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscription_link_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscription_link_id INTEGER NOT NULL,
+    raw_config TEXT NOT NULL,
+    fetched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (subscription_link_id) REFERENCES subscription_links (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscription_link_configs_link
+    ON subscription_link_configs (subscription_link_id);
+CREATE INDEX IF NOT EXISTS idx_subscription_access_logs_user
+    ON subscription_access_logs (user_id);
